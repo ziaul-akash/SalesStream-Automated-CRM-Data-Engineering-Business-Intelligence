@@ -1,334 +1,321 @@
-::: {align="center"}
-# 🚀 CRM Sales Data Engineering Pipeline --- Azure UK South
-
-`<a href="#project-overview">`{=html}
-`<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=22&pause=1000&color=0078D4&center=true&vCenter=true&width=760&lines=End-to-End+Azure+Data+Engineering;ADF+%7C+ADLS+Gen2+%7C+Databricks+%7C+Synapse;Secure+Pipelines+%7C+Analytics+%7C+Power+BI" alt="Animated project title" />`{=html}
-`</a>`{=html}
-
-```{=html}
-<p>
-```
-`<img src="https://img.shields.io/badge/Cloud-Microsoft%20Azure-0078D4?logo=microsoftazure&logoColor=white" alt="Azure badge" />`{=html}
-`<img src="https://img.shields.io/badge/Region-UK%20South-00A4EF" alt="UK South badge" />`{=html}
-`<img src="https://img.shields.io/badge/Language-PySpark%20%7C%20SQL-F2C811" alt="PySpark and SQL badge" />`{=html}
-`<img src="https://img.shields.io/badge/BI-Power%20BI-F2C811?logo=powerbi&logoColor=black" alt="Power BI badge" />`{=html}
-`<img src="https://img.shields.io/badge/Status-Portfolio%20Project-2EA44F" alt="Portfolio project badge" />`{=html}
-```{=html}
-</p>
-```
-**A production-inspired, end-to-end data platform for ingesting,
-securing, transforming, querying, and visualising CRM sales data on
-Azure.**
-
-[Project Overview](#project-overview) · [Architecture](#architecture) ·
-[Pipeline Walkthrough](#pipeline-walkthrough) ·
-[Security](#security-and-governance) · [Power
-BI](#analytics-and-visualisation) · [Getting Started](#getting-started)
-:::
-
-------------------------------------------------------------------------
-
-## Project Overview
-
-This portfolio project demonstrates a modern cloud data engineering
-workflow using CRM sales data. It moves data from on-premises or local
-CSV sources into Azure Data Lake Storage Gen2, processes it with Azure
-Databricks, exposes curated datasets through Azure Synapse Analytics
-serverless SQL, and presents business insights in Power BI.
-
-The design also incorporates source control, secret management,
-monitoring, and automated pipeline notifications---key concerns in
-maintainable data platforms.
-
-### Goals
-
--   Build a reliable ingestion workflow from local/on-premises data
-    sources to Azure.
--   Organise lake data into **raw** and **curated** zones.
--   Clean, standardise, and enrich data using PySpark.
--   Keep credentials out of notebooks and source code.
--   Query curated lake files with serverless SQL.
--   Deliver stakeholder-friendly sales reporting in Power BI.
--   Track execution and notify operators about pipeline outcomes.
-
-## Architecture
-
-::: {align="center"}
-![CRM Sales Azure Data Engineering
-Architecture](architecture_diagram.png)
-
-`<sub>`{=html}Architecture overview --- save the supplied diagram in the
-repository root as
-`<code>`{=html}architecture_diagram.png`</code>`{=html}.`</sub>`{=html}
-:::
-
-### Architecture components
-
-  -----------------------------------------------------------------------
-  Component                           Responsibility
-  ----------------------------------- -----------------------------------
-  External / CRM data sources         Provide source sales data, such as
-                                      CSV extracts
-
-  Azure Data Factory (ADF)            Orchestrate ingestion and pipeline
-                                      activities
-
-  Self-Hosted Integration Runtime     Secure connectivity to on-premises
-  (SHIR)                              data sources
-
-  Git repository                      Version control and collaborative
-                                      ADF development
-
-  Azure Data Lake Storage Gen2        Store raw and curated data zones
-
-  Azure Databricks                    Transform and enrich data using
-                                      PySpark
-
-  Azure Key Vault                     Centralise credentials, keys, and
-                                      connection secrets
-
-  Databricks Secret Scope             Allow notebooks to retrieve secrets
-                                      securely
-
-  Azure Logic Apps                    Send email notifications for
-                                      pipeline success or failure
-
-  Azure Monitor                       Monitor pipeline execution and
-                                      operational health
-
-  Azure Synapse Analytics (serverless Query curated Parquet/Delta data in
-  SQL)                                the lake
-
-  Power BI                            Build interactive sales dashboards
-                                      and reports
-  -----------------------------------------------------------------------
-
-## Pipeline Walkthrough
-
-1.  **Ingest** --- ADF copies source CRM/CSV data into the ADLS Gen2 raw
-    zone. SHIR is used where connectivity to an on-premises environment
-    is required.
-2.  **Orchestrate** --- ADF pipelines coordinate copy and transformation
-    activities. ADF is integrated with Git for version history and
-    controlled deployment.
-3.  **Land raw data** --- Preserve source extracts in the raw zone,
-    ideally with source, ingestion-date, and load-run folder
-    conventions.
-4.  **Transform** --- Databricks notebooks use PySpark to validate,
-    clean, standardise, deduplicate, and enrich the raw datasets.
-5.  **Publish curated data** --- Write analytics-ready data to the
-    curated zone in Parquet or Delta format, using a consistent schema
-    and partition strategy where appropriate.
-6.  **Protect secrets** --- Store credentials in Azure Key Vault and
-    access them through a Databricks-backed secret scope. Do not
-    hard-code secrets in notebooks, pipeline JSON, or Git.
-7.  **Query** --- Synapse serverless SQL reads curated files directly
-    from ADLS Gen2, avoiding a dedicated data warehouse for this use
-    case.
-8.  **Visualise** --- Power BI connects to Synapse SQL views or queries
-    to present KPIs, trends, and drill-down analysis.
-9.  **Observe and alert** --- Azure Monitor tracks operational signals;
-    Logic Apps sends pipeline outcome notifications to the configured
-    recipients.
-
-## Data Lake Design
-
-A simple two-zone layout is used to separate source preservation from
-analytical data.
-
-``` text
-<storage-account>/
-└── <container>/
-    ├── raw/
-    │   └── crm_sales/
-    │       └── load_date=YYYY-MM-DD/
-    └── curated/
-        └── crm_sales/
-            └── load_date=YYYY-MM-DD/
-```
-
--   **Raw zone:** source-aligned data, retained for replay and
-    traceability.
--   **Curated zone:** cleaned, conformed, analytics-ready datasets for
-    SQL and BI consumption.
-
-> The two-zone layout is often described as a simplified medallion
-> architecture (raw/bronze and curated/silver or gold, depending on the
-> transformations and business readiness). Avoid calling it a full
-> bronze--silver--gold implementation unless all three layers are
-> actually built.
-
-## Data Quality and Transformation
-
-Databricks transformation notebooks can implement checks such as:
-
--   Required-column and schema validation
--   Null handling for mandatory fields
--   Duplicate detection using business keys
--   Date, currency, and numeric type standardisation
--   Reconciliation of input and output row counts
--   Logging rejected or invalid records for investigation
-
-Suggested curated entities include sales transactions, customers,
-products, and sales territories---adjust these to match the actual
-source schema.
-
-## Security and Governance
-
--   Use Azure Key Vault as the central secret store.
--   Access Key Vault secrets through an appropriately configured
-    Databricks Secret Scope.
--   Apply least-privilege Azure RBAC and ADLS ACLs to identities and
-    users.
--   Prefer managed identities where supported; avoid storage account
-    keys when possible.
--   Keep secrets, credentials, and sensitive source data out of Git.
--   Restrict Power BI and Synapse access to approved users and datasets.
-
-## Reliability and Monitoring
-
--   Configure ADF activity retries and timeouts intentionally.
--   Route success/failure outcomes to Logic Apps for email notification.
--   Use Azure Monitor and ADF monitoring views to investigate run
-    history, duration, and failures.
--   Include run identifiers and ingestion timestamps for traceability.
--   Consider idempotent loads so a rerun does not create unintended
-    duplicates.
-
-## Analytics and Visualisation
-
-Power BI dashboards can be designed around business questions such as:
-
--   What are total sales and sales trends over time?
--   Which products or categories generate the most revenue?
--   How do sales compare across territories or regions?
--   Which customers contribute the most to sales?
--   How do monthly, quarterly, or year-over-year results change?
-
-**Potential KPI cards:** Total Revenue, Order Count, Average Order
-Value, Top Product, and Sales Growth. These are suggested metrics;
-implement them according to the available fields and business
-definitions.
-
-## Technology Stack
-
-  -----------------------------------------------------------------------
-  Area                                Technology
-  ----------------------------------- -----------------------------------
-  Cloud platform                      Microsoft Azure --- UK South
-                                      (project deployment region)
-
-  Ingestion and orchestration         Azure Data Factory
-
-  Hybrid connectivity                 Self-Hosted Integration Runtime
-
-  Data storage                        Azure Data Lake Storage Gen2
-
-  Processing                          Azure Databricks, PySpark
-
-  Secret management                   Azure Key Vault, Databricks Secret
-                                      Scope
-
-  SQL analytics                       Azure Synapse Analytics serverless
-                                      SQL
-
-  Reporting                           Power BI
-
-  Notifications                       Azure Logic Apps
-
-  Monitoring                          Azure Monitor
-
-  Version control                     Git
-  -----------------------------------------------------------------------
-
-## Getting Started
-
-### Prerequisites
-
--   An Azure subscription with permissions to create or access the
-    services listed above.
--   Azure Data Factory, ADLS Gen2, Azure Databricks, Azure Key Vault,
-    and Synapse workspace resources.
--   Power BI Desktop (for report development).
--   A CRM sales dataset in CSV format (use appropriately licensed or
-    anonymised data).
--   Git repository access.
--   Self-Hosted Integration Runtime installed on a machine with access
-    to the source, if the data is on-premises.
-
-### Setup outline
-
-1.  Clone this repository.
-2.  Create or configure the Azure resources in the target region.
-3.  Create ADLS Gen2 raw and curated containers/folders.
-4.  Configure ADF linked services and datasets; use SHIR for on-premises
-    connectivity when needed.
-5.  Connect ADF to Git and publish pipeline artifacts through your
-    chosen deployment workflow.
-6.  Configure Key Vault and the Databricks secret scope with
-    least-privilege access.
-7.  Import and configure Databricks notebooks; parameterise storage
-    paths and input locations.
-8.  Run ingestion into raw, then execute transformations and publish
-    curated output.
-9.  Define Synapse serverless SQL views over curated files.
-10. Connect Power BI to Synapse and build/report the agreed metrics.
-11. Configure Logic Apps notifications and validate monitoring by
-    testing both successful and failed runs.
-
-> Resource names, linked-service settings, secret names, and notebook
-> paths are environment-specific. Do not commit credentials or live
-> connection strings.
-
-## Repository Structure
-
-``` text
+# 🚀 CRM Sales Data Engineering Pipeline | Azure UK South
+
+**An end-to-end Azure Data Engineering solution for automated CRM sales data ingestion, transformation, secure storage, optimised analytics, and interactive business intelligence.**
+
+---
+
+## 📌 Project Overview
+
+This project demonstrates the development of a modern, end-to-end Azure Data Engineering pipeline using CRM sales data.
+
+The solution integrates multiple Azure services to build a scalable and secure data platform that ingests data from external and on-premises sources, transforms raw data into analytics-ready datasets, and delivers business insights through Power BI dashboards.
+
+The pipeline follows a structured Raw-to-Curated Data Lake architecture, leveraging Azure Data Factory for orchestration, Azure Databricks for PySpark transformations, Azure Data Lake Storage Gen2 for storage, and Azure Synapse Analytics for serverless SQL analytics.
+
+The project also implements automated monitoring, email notifications, Git integration, and centralised secrets management to improve reliability, maintainability, and security.
+
+## 🎯 Business Problem
+
+Organisations often maintain CRM sales data across multiple systems and file formats. Extracting meaningful business insights from this data can become challenging due to:
+
+- Manual and time-consuming data ingestion processes.
+- Inconsistent data formats, schemas, and data quality.
+- Large volumes of raw data increasing storage requirements.
+- Complex transformation logic required before analytics.
+- Slow reporting caused by querying unoptimised datasets.
+- Security risks associated with hardcoded credentials.
+- Lack of automated pipeline monitoring and failure notifications.
+- Difficulty maintaining and collaborating on data pipelines.
+
+These challenges can delay reporting, increase operational overhead, and make it difficult for business stakeholders to access reliable and timely sales insights.
+
+## 💡 Solution
+
+I designed and implemented an Azure-based data engineering pipeline to automate the complete data lifecycle.
+
+The solution:
+
+- Automates ingestion of CRM sales data using Azure Data Factory.
+- Uses Self-Hosted Integration Runtime for secure on-premises connectivity.
+- Implements a Raw and Curated Data Lake architecture using ADLS Gen2.
+- Uses Azure Databricks and PySpark for data cleaning, standardisation, and transformation.
+- Applies efficient storage formats such as Parquet/Delta for analytics-ready data.
+- Uses Azure Synapse Analytics Serverless SQL to query curated data directly from the Data Lake.
+- Integrates Power BI for interactive sales reporting and business insights.
+- Uses Azure Key Vault and Databricks Secret Scope for secure credential management.
+- Implements Logic Apps email alerts for pipeline success and failure.
+- Uses Azure Monitor for operational monitoring and troubleshooting.
+- Integrates Azure Data Factory with Git for version control and collaborative development.
+
+The overall objective is to reduce manual effort, improve data processing efficiency, optimise storage, and make business reporting faster and more reliable.
+
+## 🏗️ Architecture
+
+![Azure CRM Sales Data Engineering Architecture](architecture_diagram.png)
+
+### Architecture Components
+
+| Azure Service | Purpose |
+|---|---|
+| External Data Sources | Source CRM sales data and CSV files |
+| Azure Data Factory | Data ingestion and pipeline orchestration |
+| Self-Hosted Integration Runtime | Secure connectivity to on-premises data |
+| Git Repository | Version control and collaboration |
+| Azure Data Lake Storage Gen2 | Raw and curated data storage |
+| Azure Databricks | Data transformation using PySpark |
+| Azure Key Vault | Secure storage of credentials and secrets |
+| Databricks Secret Scope | Secure access to stored secrets |
+| Azure Synapse Analytics | Serverless SQL analytics on curated data |
+| Power BI | Interactive dashboards and visualisation |
+| Azure Logic Apps | Automated email notifications |
+| Azure Monitor | Pipeline monitoring and operational tracking |
+
+## 🔄 End-to-End Data Pipeline
+
+### 1. Data Ingestion — Azure Data Factory
+
+- Ingest CRM sales data from external and on-premises sources.
+- Use Self-Hosted Integration Runtime for secure connectivity.
+- Automate data movement into Azure Data Lake Storage Gen2.
+- Configure pipeline dependencies and execution activities.
+
+### 2. Data Lake Storage — ADLS Gen2
+
+Implement a structured Data Lake architecture:
+
+- **Raw Zone:** Stores source data in its original form for traceability and reprocessing.
+- **Curated Zone:** Stores cleaned, transformed, and analytics-ready data.
+
+This separation improves data organisation, maintainability, and downstream analytics.
+
+### 3. Data Transformation — Azure Databricks
+
+Use PySpark notebooks to perform:
+
+- Data cleansing and standardisation.
+- Schema validation and data type conversion.
+- Duplicate record handling.
+- Null value management.
+- Data enrichment and business transformations.
+- Efficient writing of curated datasets.
+
+### 4. Data Security — Azure Key Vault
+
+- Store sensitive credentials securely.
+- Integrate Azure Key Vault with Databricks Secret Scope.
+- Retrieve secrets securely during pipeline execution.
+- Avoid hardcoding storage keys and connection strings.
+- Apply appropriate access controls.
+
+### 5. SQL Analytics — Azure Synapse Analytics
+
+Use Synapse Serverless SQL Pool to query curated datasets directly from ADLS Gen2.
+
+- Query Parquet/Delta files without loading them into a dedicated warehouse.
+- Create SQL views for reporting.
+- Enable efficient analytical access to transformed datasets.
+- Reduce unnecessary data movement.
+
+### 6. Business Intelligence — Power BI
+
+Connect Power BI to Synapse Analytics to build interactive dashboards.
+
+Potential business KPIs include:
+
+- Total Sales Revenue
+- Total Orders
+- Average Order Value
+- Monthly Sales Trends
+- Product Performance
+- Customer Sales Analysis
+- Regional Sales Performance
+- Sales Growth
+
+### 7. Monitoring and Notifications
+
+- Configure Azure Monitor for pipeline execution tracking.
+- Integrate Azure Logic Apps for email notifications.
+- Send automated alerts on pipeline success or failure.
+- Improve operational visibility and troubleshooting.
+
+---
+
+## ⚡ Problem Solving, Performance Optimisation & Efficiency
+
+One of the key objectives of this project is to simplify complex data engineering processes while improving storage efficiency and analytical performance.
+
+### Challenges Addressed
+
+| Challenge | Solution | Expected Improvement |
+|---|---|---|
+| Manual data ingestion | Automated ADF pipelines | Reduced manual intervention |
+| Large raw CSV datasets | Parquet/Delta-based curated storage | More efficient storage and analytics |
+| Complex data cleaning | PySpark transformation notebooks | Reusable and scalable processing |
+| Slow analytical queries | Synapse Serverless SQL on curated files | Reduced unnecessary data processing |
+| Repeated data processing | Structured Raw and Curated zones | Improved data organisation and reprocessing |
+| Hardcoded credentials | Azure Key Vault integration | Improved security and maintainability |
+| Pipeline failures without visibility | Logic Apps email alerts | Faster issue identification |
+| Difficult pipeline maintenance | Git-integrated ADF development | Improved collaboration and version control |
+
+### Storage Optimisation
+
+Raw CSV files are useful for ingestion, but they can be inefficient for repeated analytical workloads.
+
+By transforming data into columnar formats such as Parquet or Delta, the pipeline can benefit from:
+
+- Compression to reduce storage footprint.
+- Columnar storage for analytical workloads.
+- Efficient column pruning.
+- Reduced data scanning when queries select only required columns.
+- Improved compatibility with Spark and serverless SQL analytics.
+
+**Note:** Actual storage reduction depends on the dataset, compression settings, schema, and file sizes. Quantitative improvements should be measured against the original CSV data.
+
+### Query Performance Optimisation
+
+The curated layer is designed to support efficient downstream analytics.
+
+Potential optimisation strategies include:
+
+- Selecting only the required columns in SQL queries.
+- Applying partitioning based on suitable business or date columns.
+- Avoiding unnecessary full dataset scans.
+- Reducing small-file overhead during Spark writes.
+- Using appropriate Parquet compression.
+- Creating reusable Synapse SQL views for reporting.
+
+These techniques can reduce data scanned and improve query response times when implemented appropriately.
+
+### Processing Efficiency
+
+Azure Databricks provides distributed processing capabilities using Apache Spark.
+
+PySpark allows the pipeline to process larger datasets efficiently compared with purely manual or single-machine processing approaches.
+
+The transformation layer also centralises business logic, making data preparation more consistent, reusable, and maintainable.
+
+---
+
+## 🔐 Security & Governance
+
+Security is implemented across the data pipeline using Azure-native services.
+
+- Azure Key Vault for centralised secret management.
+- Databricks Secret Scope for secure credential retrieval.
+- Azure RBAC for access control.
+- ADLS Gen2 ACLs for data access permissions.
+- Git-based version control without committing secrets.
+- Secure connectivity through Self-Hosted Integration Runtime.
+
+The design follows the principle of least privilege wherever applicable.
+
+## 📊 Analytics & Business Insights
+
+The curated CRM sales data can be used to support business decisions through Power BI.
+
+Example dashboard analysis:
+
+- Identify top-performing products.
+- Analyse sales trends over time.
+- Compare regional performance.
+- Identify high-value customers.
+- Track revenue growth.
+- Monitor order volumes and average order values.
+
+The final objective is to transform raw operational data into meaningful and accessible business insights.
+
+## 🛠️ Technology Stack
+
+| Category | Technology |
+|---|---|
+| Cloud Platform | Microsoft Azure |
+| Cloud Region | UK South |
+| Data Ingestion | Azure Data Factory |
+| Hybrid Connectivity | Self-Hosted Integration Runtime |
+| Storage | Azure Data Lake Storage Gen2 |
+| Data Processing | Azure Databricks |
+| Programming | Python, PySpark |
+| Data Formats | CSV, Parquet, Delta |
+| SQL Analytics | Azure Synapse Analytics Serverless SQL |
+| Security | Azure Key Vault, Databricks Secret Scope |
+| Monitoring | Azure Monitor |
+| Notifications | Azure Logic Apps |
+| Visualisation | Power BI |
+| Version Control | Git |
+
+## 📁 Repository Structure
+
+```text
 CRM_SALES_UKSOUTH_AZURE_PROJECT/
+│
 ├── README.md
+│
 ├── architecture_diagram.png
+│
 ├── adf/
 │   ├── pipelines/
 │   ├── datasets/
-│   └── linked_services/       # Sanitised templates only
+│   └── linked_services/
+│
 ├── databricks/
 │   └── notebooks/
-│       ├── 01_ingest_validation.py
-│       └── 02_transform_curate.py
+│       ├── 01_data_ingestion.py
+│       ├── 02_data_cleaning.py
+│       └── 03_data_transformation.py
+│
 ├── synapse/
 │   └── sql/
 │       └── curated_views.sql
+│
 ├── powerbi/
-│   └── reports/               # Report files / screenshots
+│   └── dashboards/
+│
 └── docs/
     └── data_dictionary.md
 ```
 
-Update this tree to reflect the artifacts actually present in your
-repository.
+*Repository structure is illustrative and should be adjusted to match the actual project files.*
 
-## Project Status and Future Enhancements
+## 🚀 Project Implementation Steps
 
-This README describes the intended project workflow. Mark components as
-completed only after they have been implemented and tested in your Azure
-environment.
+1. Create Azure resources in the UK South region.
+2. Configure Azure Data Factory and Git integration.
+3. Set up Self-Hosted Integration Runtime.
+4. Create ADLS Gen2 storage and Raw/Curated zones.
+5. Configure ADF ingestion pipelines.
+6. Integrate Azure Key Vault with Databricks.
+7. Develop PySpark transformation notebooks.
+8. Transform and publish curated datasets.
+9. Configure Synapse Serverless SQL access.
+10. Build Power BI dashboards.
+11. Configure Azure Monitor and Logic Apps email alerts.
+12. Test pipeline execution, data quality, and failure handling.
 
-Potential next steps:
+## 📈 Future Enhancements
 
--   Add a third gold/business layer for dimensional models and
-    aggregated reporting.
--   Add automated data quality tests and pipeline validation.
--   Introduce CI/CD deployment for ADF and notebook assets.
--   Add incremental ingestion using watermarks.
--   Implement a dimensional model (fact sales and dimension tables) if
-    the reporting requirements call for it.
--   Document data lineage, schema, and KPI definitions.
+- Implement incremental data ingestion using watermarks.
+- Introduce a full Bronze, Silver, and Gold Medallion Architecture.
+- Add automated data quality validation.
+- Implement CI/CD using Azure DevOps.
+- Introduce dimensional modelling for advanced reporting.
+- Implement automated performance benchmarking.
+- Add pipeline execution metrics and data reconciliation.
+- Optimise Spark partitioning and file sizes based on workload.
 
-## Author
+## 👨‍💻 Author
 
-**Akash** · Azure Data Engineering Portfolio Project
+**Ziaul Haq Akash**
 
-------------------------------------------------------------------------
+Azure Data Engineering Portfolio Project
 
-::: {align="center"}
-[⬆ Back to top](#-crm-sales-data-engineering-pipeline--azure-uk-south)
-:::
+Skills Demonstrated:
+
+Azure Data Factory | Azure Databricks | PySpark | ADLS Gen2 | Azure Synapse Analytics | Azure Key Vault | Power BI | SQL | Data Engineering | ETL | Cloud Data Architecture
+
+---
+
+<div align="center">
+
+⭐ If you find this project useful, feel free to star the repository.
+
+</div>
