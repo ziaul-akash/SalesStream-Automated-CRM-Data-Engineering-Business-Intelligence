@@ -243,38 +243,6 @@ The final objective is to transform raw operational data into meaningful and acc
 | Visualisation | Power BI |
 | Version Control | Git |
 
-## 📁 Repository Structure
-
-```text
-CRM_SALES_UKSOUTH_AZURE_PROJECT/
-│
-├── README.md
-│
-├── architecture_diagram.png
-│
-├── adf/
-│   ├── pipelines/
-│   ├── datasets/
-│   └── linked_services/
-│
-├── databricks/
-│   └── notebooks/
-│       ├── 01_data_ingestion.py
-│       ├── 02_data_cleaning.py
-│       └── 03_data_transformation.py
-│
-├── synapse/
-│   └── sql/
-│       └── curated_views.sql
-│
-├── powerbi/
-│   └── dashboards/
-│
-└── docs/
-    └── data_dictionary.md
-```
-
-*Repository structure is illustrative and should be adjusted to match the actual project files.*
 
 ## 🚀 Project Implementation Steps
 
