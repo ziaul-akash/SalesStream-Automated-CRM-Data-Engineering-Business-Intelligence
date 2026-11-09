@@ -259,16 +259,6 @@ The final objective is to transform raw operational data into meaningful and acc
 11. Configure Azure Monitor and Logic Apps email alerts.
 12. Test pipeline execution, data quality, and failure handling.
 
-## 📈 Future Enhancements
-
-- Implement incremental data ingestion using watermarks.
-- Introduce a full Bronze, Silver, and Gold Medallion Architecture.
-- Add automated data quality validation.
-- Implement CI/CD using Azure DevOps.
-- Introduce dimensional modelling for advanced reporting.
-- Implement automated performance benchmarking.
-- Add pipeline execution metrics and data reconciliation.
-- Optimise Spark partitioning and file sizes based on workload.
 
 ## 👨‍💻 Author
 
@@ -282,8 +272,6 @@ Azure Data Factory | Azure Databricks | PySpark | ADLS Gen2 | Azure Synapse Anal
 
 ---
 
-<div align="center">
-
 ⭐ If you find this project useful, feel free to star the repository.
 
-</div>
+
