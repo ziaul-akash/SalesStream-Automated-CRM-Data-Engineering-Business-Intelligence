@@ -1,4 +1,4 @@
-# 🚀 CRM Sales Data Engineering Pipeline | Azure UK South
+# 🚀 SalesStream — Automated CRM Data Engineering & Business Intelligence
 
 **An end-to-end Azure Data Engineering solution for automated CRM sales data ingestion, transformation, secure storage, optimised analytics, and interactive business intelligence.**
 
